@@ -1,0 +1,15 @@
+[package]
+name = "ntfy-run"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+clap = { version = "4.5.20", features = ["derive", "env"] }
+itertools = "0.13.0"
+reqwest = "0.12.8"
+tokio = { version = "1.40.0", features = ["io-std", "io-util", "macros", "process", "rt-multi-thread"] }
+
+[profile.release]
+lto = true
+strip = true
+panic = "abort"
