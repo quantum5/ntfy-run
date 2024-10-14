@@ -9,9 +9,26 @@ jobs:
   build:
     name: Publish binaries
     runs-on: ubuntu-20.04
+    env:
+      OPENSSL_DIR: /opt/openssl
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: /opt/openssl
+          key: openssl-3.3.2
+        id: openssl-cache
+      - name: Build OpenSSL
+        run: |
+          mkdir openssl
+          cd openssl
+          curl -L https://github.com/openssl/openssl/releases/download/openssl-3.3.2/openssl-3.3.2.tar.gz | \
+            tar -xz --strip-components=1
+          ./Configure --prefix=$OPENSSL_DIR --libdir=lib linux-x86_64 -fPIC -g no-shared
+          make -j$(nproc)
+          make install_sw
+        if: '!steps.openssl-cache.outputs.cache-hit'
       - name: Build project
         run: |
           cargo build --release
