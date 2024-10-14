@@ -9,7 +9,14 @@ can be changed with flags.
 
 ## Installation
 
-You can download a binary from GitHub releases or build it yourself:
+You can download a binary from GitHub releases:
+
+```bash
+sudo wget https://github.com/quantum5/ntfy-run/releases/latest/download/ntfy-run-amd64 -O /usr/local/bin/ntfy-run
+sudo chmod a+x /usr/local/bin/ntfy-run
+```
+
+Alternatively, build it yourself:
 
 ```bash
 git clone https://github.com/quantum5/ntfy-run.git
