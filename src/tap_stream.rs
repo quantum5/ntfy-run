@@ -34,11 +34,11 @@ impl<R: AsyncRead + Unpin, W: AsyncWrite + Unpin> TapStream<R, W> {
             self.buf_start = 0;
             self.buf_end = bytes;
 
-            Ok(if bytes == 0 {
-                ReadOrWrite::EOF
+            if bytes == 0 {
+                Ok(ReadOrWrite::EOF)
             } else {
-                ReadOrWrite::Read(&self.buffer[0..bytes])
-            })
+                Ok(ReadOrWrite::Read(&self.buffer[0..bytes]))
+            }
         } else {
             let bytes = self
                 .target

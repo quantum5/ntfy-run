@@ -61,29 +61,20 @@ pub async fn run_forward_and_capture(cmdline: &Vec<String>) -> CapturedOutput {
             result = stdout_tap.step(), if !stdout_eof => match result {
                 Ok(ReadOrWrite::Read(bytes)) => stdout.extend_from_slice(bytes),
                 Ok(ReadOrWrite::Written) => (),
-                Ok(ReadOrWrite::EOF) => match (stderr_eof, maybe_status) {
-                    (true, Some(status)) => break status,
-                    _ => stdout_eof = true,
-                },
+                Ok(ReadOrWrite::EOF) => stdout_eof = true,
                 Err(error) => errors.push(CaptureError::Stdout(error)),
             },
             result = stderr_tap.step(), if !stderr_eof => match result {
                 Ok(ReadOrWrite::Read(bytes)) => stderr.extend_from_slice(bytes),
                 Ok(ReadOrWrite::Written) => (),
-                Ok(ReadOrWrite::EOF) => match (stdout_eof, maybe_status) {
-                    (true, Some(status)) => break status,
-                    _ => stderr_eof = true,
-                },
+                Ok(ReadOrWrite::EOF) => stderr_eof = true,
                 Err(error) => errors.push(CaptureError::Stderr(error)),
             },
             status = child.wait(), if maybe_status.is_none() => match status {
-                Ok(status) => if stdout_eof && stderr_eof {
-                    break status;
-                } else {
-                    maybe_status = Some(status);
-                },
+                Ok(status) => maybe_status = Some(status),
                 Err(error) => errors.push(CaptureError::Wait(error)),
-            }
+            },
+            else => break maybe_status.unwrap(),
         }
     };
 
