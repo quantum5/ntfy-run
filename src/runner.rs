@@ -1,19 +1,19 @@
+use crate::tap_stream::{ReadOrWrite, TapStream};
 use std::process::{ExitStatus, Stdio};
-use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::process::Command;
-use tokio::select;
+use tokio::{io, select};
 
 pub enum CaptureError {
-    Spawn(std::io::Error),
-    Stdout(std::io::Error),
-    Stderr(std::io::Error),
-    Wait(std::io::Error),
+    Spawn(io::Error),
+    Stdout(io::Error),
+    Stderr(io::Error),
+    Wait(io::Error),
 }
 
 pub struct CapturedOutput {
     pub status: Option<ExitStatus>,
-    pub stdout: String,
-    pub stderr: String,
+    pub stdout: Vec<u8>,
+    pub stderr: Vec<u8>,
     pub errors: Vec<CaptureError>,
 }
 
@@ -38,40 +38,50 @@ pub async fn run_forward_and_capture(cmdline: &Vec<String>) -> CapturedOutput {
         Err(error) => {
             return CapturedOutput {
                 status: None,
-                stdout: "".to_string(),
-                stderr: "".to_string(),
+                stdout: vec![],
+                stderr: vec![],
                 errors: vec![CaptureError::Spawn(error)],
             }
         }
     };
 
-    let mut stdout_stream = BufReader::new(child.stdout.take().unwrap()).lines();
-    let mut stderr_stream = BufReader::new(child.stderr.take().unwrap()).lines();
+    let mut stdout_tap = TapStream::new(child.stdout.take().unwrap(), io::stdout());
+    let mut stderr_tap = TapStream::new(child.stderr.take().unwrap(), io::stderr());
 
-    let mut stdout_buffer = Vec::new();
-    let mut stderr_buffer = Vec::new();
+    let mut stdout = vec![];
+    let mut stderr = vec![];
     let mut errors = Vec::new();
+
+    let mut stdout_eof = false;
+    let mut stderr_eof = false;
+    let mut maybe_status: Option<ExitStatus> = None;
 
     let status = loop {
         select! {
-            line = stdout_stream.next_line() => match line {
-                Ok(Some(line)) => {
-                    println!("{}", line);
-                    stdout_buffer.push(line);
+            result = stdout_tap.step(), if !stdout_eof => match result {
+                Ok(ReadOrWrite::Read(bytes)) => stdout.extend_from_slice(bytes),
+                Ok(ReadOrWrite::Written) => (),
+                Ok(ReadOrWrite::EOF) => match (stderr_eof, maybe_status) {
+                    (true, Some(status)) => break status,
+                    _ => stdout_eof = true,
                 },
-                Ok(None) => (),
                 Err(error) => errors.push(CaptureError::Stdout(error)),
             },
-            line = stderr_stream.next_line() => match line {
-                Ok(Some(line)) => {
-                    eprintln!("{}", line);
-                    stderr_buffer.push(line);
+            result = stderr_tap.step(), if !stderr_eof => match result {
+                Ok(ReadOrWrite::Read(bytes)) => stderr.extend_from_slice(bytes),
+                Ok(ReadOrWrite::Written) => (),
+                Ok(ReadOrWrite::EOF) => match (stdout_eof, maybe_status) {
+                    (true, Some(status)) => break status,
+                    _ => stderr_eof = true,
                 },
-                Ok(None) => (),
                 Err(error) => errors.push(CaptureError::Stderr(error)),
             },
-            status = child.wait() => match status {
-                Ok(status) => break status,
+            status = child.wait(), if maybe_status.is_none() => match status {
+                Ok(status) => if stdout_eof && stderr_eof {
+                    break status;
+                } else {
+                    maybe_status = Some(status);
+                },
                 Err(error) => errors.push(CaptureError::Wait(error)),
             }
         }
@@ -79,8 +89,8 @@ pub async fn run_forward_and_capture(cmdline: &Vec<String>) -> CapturedOutput {
 
     CapturedOutput {
         status: Some(status),
-        stdout: stdout_buffer.join("\n").to_string(),
-        stderr: stderr_buffer.join("\n").to_string(),
+        stdout,
+        stderr,
         errors,
     }
 }

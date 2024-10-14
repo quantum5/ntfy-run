@@ -4,6 +4,7 @@ use runner::CapturedOutput;
 
 mod quote;
 mod runner;
+mod tap_stream;
 
 #[derive(Parser)]
 /// Tool to run a command, capture its output, and send it to ntfy.
@@ -113,13 +114,13 @@ fn format_post_body(output: CapturedOutput) -> String {
 
     if !output.stdout.is_empty() {
         fragments.push("==================== STDOUT ====================".to_string());
-        fragments.push(output.stdout);
+        fragments.push(String::from_utf8_lossy(&output.stdout).into_owned());
         fragments.push("\n".to_string());
     }
 
     if !output.stderr.is_empty() {
         fragments.push("==================== STDERR ====================".to_string());
-        fragments.push(output.stderr);
+        fragments.push(String::from_utf8_lossy(&output.stderr).into_owned());
         fragments.push("\n".to_string());
     }
 
