@@ -100,7 +100,8 @@ fn format_post_body(output: CapturedOutput) -> String {
     }];
 
     if !output.errors.is_empty() {
-        fragments.push("==================== Errors ====================".to_string());
+        fragments.push("".to_string());
+        fragments.push("========== Errors ==========".to_string());
         for error in &output.errors {
             fragments.push(match error {
                 CaptureError::Spawn(error) => format!("Spawn error: {}", error),
@@ -109,19 +110,18 @@ fn format_post_body(output: CapturedOutput) -> String {
                 CaptureError::Wait(error) => format!("Error while waiting for process: {}", error),
             });
         }
-        fragments.push("\n".to_string());
     }
 
     if !output.stdout.is_empty() {
-        fragments.push("==================== STDOUT ====================".to_string());
-        fragments.push(String::from_utf8_lossy(&output.stdout).into_owned());
-        fragments.push("\n".to_string());
+        fragments.push("".to_string());
+        fragments.push("========== STDOUT ==========".to_string());
+        fragments.push(String::from_utf8_lossy(output.stdout.trim_ascii_end()).into_owned());
     }
 
     if !output.stderr.is_empty() {
-        fragments.push("==================== STDERR ====================".to_string());
-        fragments.push(String::from_utf8_lossy(&output.stderr).into_owned());
-        fragments.push("\n".to_string());
+        fragments.push("".to_string());
+        fragments.push("========== STDERR ==========".to_string());
+        fragments.push(String::from_utf8_lossy(output.stderr.trim_ascii_end()).into_owned());
     }
 
     fragments.join("\n")
