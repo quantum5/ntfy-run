@@ -1,7 +1,15 @@
 [package]
 name = "ntfy-run"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
+authors = ["Quantum <me@quantum5.ca>"]
+description = "ntfy-run is a tool to run a command, capture its output, and send it to a ntfy server."
+readme = "README.md"
+homepage = "https://github.com/quantum5/ntfy-run"
+repository = "https://github.com/quantum5/ntfy-run"
+license = "GPL-3"
+keywords = ["ntfy", "cron", "notifications", "utility"]
+categories = ["command-line-interface"]
 
 [dependencies]
 clap = { version = "4.5.20", features = ["derive", "env"] }

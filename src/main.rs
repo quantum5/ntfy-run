@@ -7,7 +7,7 @@ mod runner;
 mod tap_stream;
 
 #[derive(Parser)]
-/// Tool to run a command, capture its output, and send it to ntfy.
+#[command(version, about)]
 struct Cli {
     /// URL of the ntfy server and topic, e.g. https://ntfy.sh/topic
     #[arg(short = 'n', long = "ntfy-url", env = "NTFY_URL", alias = "url")]
