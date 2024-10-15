@@ -1,6 +1,5 @@
-use crate::runner::CaptureError;
+use crate::runner::{CaptureError, CapturedOutput};
 use clap::Parser;
-use runner::CapturedOutput;
 use std::process::exit;
 
 mod quote;

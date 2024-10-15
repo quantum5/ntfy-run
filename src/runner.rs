@@ -1,7 +1,6 @@
 use crate::tap_stream::{ReadOrWrite, TapStream};
 use std::process::{ExitStatus, Stdio};
-use tokio::process::Command;
-use tokio::{io, select};
+use tokio::{io, process::Command, select};
 
 pub enum CaptureError {
     Spawn(io::Error),
