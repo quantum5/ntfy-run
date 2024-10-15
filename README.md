@@ -16,7 +16,13 @@ sudo wget https://github.com/quantum5/ntfy-run/releases/latest/download/ntfy-run
 sudo chmod a+x /usr/local/bin/ntfy-run
 ```
 
-Alternatively, build it yourself:
+You can also install the latest release with `cargo`:
+
+```bash
+cargo install ntfy-run
+```
+
+Finally, you can build the latest Git version yourself:
 
 ```bash
 git clone https://github.com/quantum5/ntfy-run.git
