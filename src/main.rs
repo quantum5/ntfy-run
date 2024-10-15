@@ -1,6 +1,7 @@
 use crate::runner::CaptureError;
 use clap::Parser;
 use runner::CapturedOutput;
+use std::process::exit;
 
 mod quote;
 mod runner;
@@ -210,7 +211,13 @@ async fn main() {
     };
 
     match request.send().await.and_then(|r| r.error_for_status()) {
-        Ok(_) => (),
-        Err(error) => eprintln!("Failed to send request to ntfy: {}", error),
+        Ok(_) => exit(match status {
+            Some(code) => code.code().unwrap_or(255),
+            None => 255,
+        }),
+        Err(error) => {
+            eprintln!("Failed to send request to ntfy: {}", error);
+            exit(37)
+        }
     }
 }
