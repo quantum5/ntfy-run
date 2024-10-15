@@ -11,6 +11,10 @@ license = "GPL-3"
 keywords = ["ntfy", "cron", "notifications", "utility"]
 categories = ["command-line-interface"]
 
+exclude = [
+    ".github/*"
+]
+
 [dependencies]
 clap = { version = "4.5.20", features = ["derive", "env"] }
 itertools = "0.13.0"
